@@ -1,10 +1,5 @@
 # CD Ayasse
-# 31 July 2023
-#   CRITICAL UPDATE: 21 FEBRUARY 2024 (fixing parallel random number streams)
-#   Updated on 1 Sept 2023 to: (1) add option of LD
-#                              (2) move some condition info to outside this 
-#                                  function that is not needed, only being used 
-#                                  to put in the output
+
 # Function to enable parallelization of Simulations for GRM vs Rasch
 
 
