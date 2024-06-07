@@ -1,13 +1,10 @@
 # CD Ayasse
-# 31 July 2023
-#   CRITICAL UPDATES ON: 
-#     1 AUGUST 2023; 3 AUGUST 2023; 21 FEBRUARY 2024 (fixing parallel random number streams)
-#   Updated 3 Aug 2023 to change/narrow some conditions for next run
 
-# Testing GRM (Samejima) IRT Model vs Rasch IRT Model (PCM) under different 
+# Testing non-Rasch and Rasch IRT Models under different 
 #   underlying data conditions/structures
 #     - Gaded Response Model (GRM; Samejima)
 #     - Rasch: Partial Credit Model (PCM)
+#     - Graded Partial Credit Model (GPCM)
 
 # Varying:
 #     - Item loadings/slopes
@@ -28,23 +25,13 @@ options(rstudio.help.showDataPreview = FALSE) #temp while R fixes a bug
 
 # Save folder tree name for data, figures, tables: ----------------------------- ####
 
-# main.folder.name <-
-#   paste0("C:/Users/cayasse/OneDrive - Critical Path Institute/Documents/R_Directory/",
-#          "IRTSims_GRMvsRasch/")
-# code.name <- paste0(main.folder.name,"CODE_GRMvsRasch/")
-# tables.name <- paste0(main.folder.name,"TBLs_GRMvsRasch/")
-# figures.name <- paste0(main.folder.name,"FIGs_GRMvsRasch/")
-# object.name <- paste0(main.folder.name,"OBJs_GRMvsRasch/")
-# data.name <- paste0(main.folder.name,"DATA_GRMvsRasch/")
-# genfntn.name <- "C:/Users/cayasse/OneDrive - Critical Path Institute/Documents/R_Directory/GEN_FUNCTIONS/"
-
-main.folder.name <- paste0("C:/Users/colea/Documents/RDirectory/","IRTSims_GRMvsRasch/")
-code.name <- paste0(main.folder.name,"CODE_GRMvsRasch/")
-tables.name <- paste0(main.folder.name,"TBLs_GRMvsRasch/")
-figures.name <- paste0(main.folder.name,"FIGs_GRMvsRasch/")
-object.name <- paste0(main.folder.name,"OBJs_GRMvsRasch/")
-data.name <- paste0(main.folder.name,"DATA_GRMvsRasch/")
-genfntn.name <- "C:/Users/colea/Documents/RDirectory/GEN_FUNCTIONS/"
+# main.folder.name 
+# code.name 
+# tables.name 
+# figures.name 
+# object.name 
+# data.name 
+# genfntn.name 
 
 
 
@@ -64,15 +51,13 @@ library(foreach) #for parallel
 
 # General-use custom functions:
 source(paste0(genfntn.name,"CDA_R2_Function_dump_df_mat_to_file.R")) #custom function for printing table to .doc file
-source(paste0(genfntn.name,"CDA_IRT_ScoringStats_Fntns.R")) #custom function for bifactor/IRT scoring statistics
+source(paste0(genfntn.name,"CDA_IRT_ScoringStats_Fntns.R")) #custom function for bifactor/IRT scoring statistics  
 source(paste0(genfntn.name,"CDA_OrdItemsDat_Fntn.R")) #custom function for creating dataset with ordinal items
 source(paste0(genfntn.name,"CDA_ConvertUnitDifftime_Fntn.R")) #custom function to convert unit of difftime objects (since R sometimes doesn't automatically)
 source(paste0(genfntn.name,"CDA_FileNameCreate_Fntn.R")) #custom fntn filename str, GENERAL 
 
 # Custom functions that are specific to this project or script:
 source(paste0(code.name,"IRTSims_GRMvsRasch_ParallelCondsOutside_Fntn.R")) #function for parallelization for THIS script/sim
-source(paste0(code.name,"IRTSims_GRMvsRasch_FileNameGen_Fntn.R")) #custom fntn to produce filename info as one string
-source(paste0(code.name,"IRTSims_GRMvsRasch_RunSeqGen_Fntn.R")) #custom fntn to generate the Run Sequence Identifier
 
 
 # Create a new class to use for outputting 2 results in parallel loops:
