@@ -497,9 +497,9 @@ grmvrasch.parallel.condsout.fntn <-
     #   Run GPCM:
     if ("GPCM" %in% models.run) {
       if (is.null(num.cycles)) {
-        gpcm.uni.mod <- mirt::mirt(data=dat.ord.items, model=1, itemtype="graded", verbose=F)
+        gpcm.uni.mod <- mirt::mirt(data=dat.ord.items, model=1, itemtype="gpcm", verbose=F)
       } else {
-        gpcm.uni.mod <- mirt::mirt(data=dat.ord.items, model=1, itemtype="graded", 
+        gpcm.uni.mod <- mirt::mirt(data=dat.ord.items, model=1, itemtype="gpcm", 
                                    verbose=F, technical=list(NCYCLES=num.cycles))
       }
       #     tryCatch statement in case occasionally errors:
