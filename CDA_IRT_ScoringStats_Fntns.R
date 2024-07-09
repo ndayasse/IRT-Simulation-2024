@@ -278,20 +278,5 @@ omega.ratio.fntn <- function(omega.h.gen=NULL, omega.gen=NULL, irt.model=NULL) {
 }
 
 
-# omegaH / omega -> ratio
-# if both are high, the ratio tells us what % of the total var is explained by the general factor
-# "essentially unidimensional"
-# omega.h[[1]] / omega # % explained by general
-# 1 - (omega.h[[1]] / omega) # 1-(omegah / omega) # % explained by the residual/specific factors
-
-# 1) unidimensional model, local dependence 
-#     -> if acceptable model fit & no local dependence, we're done
-# 2) if that doesn't work, then go to bifactor and look at
-#     - omega
-#     - omega.h
-#     - omega.h/omega ratio 
-#     - ECV
-
-
 
 
