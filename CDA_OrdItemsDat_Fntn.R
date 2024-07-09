@@ -1,6 +1,6 @@
 # C.D. Ayasse
 # 4 Jan 2023
-# Functions for creation of bifactor ordinal item data
+# Functions for creation of ordinal item data
 
 # Some updates:
 #   14 Nov 2023: changed object name "latent.vars" to "params.latent.vars"
