@@ -1,18 +1,17 @@
 # CD Ayasse
 
-# Function to enable parallelization of Simulations for GRM vs Rasch
+# Function to enable parallelization of Simulations for GRM vs Rasch:PCM vs GPCM
 
 
-grmvrasch.parallel.condsout.fntn <- 
+grmvrasch.parallel.fntn <- 
   function(col.out, repl, uni.cond=NULL, ld.load=NULL, 
            sample.size, number.items, num.resp.cat, item.params,
-           models.run=c("GRM","PCM","GPCM"), #c("GRM","PCM","RSM"), 
+           models.run=c("GRM","PCM","GPCM"), 
            alpha=0.05, num.cycles=NULL) {
     
     
     
-    # RNGkind("L'Ecuyer-CMRG") #INCLUDING THIS IN THE FUNCTION CAUSES PROBLEMS FOR DORNG! (works for the older parallel workaround)
-    #   save current state of RNG:
+    #  save current state of RNG:
     cur.seed = get(".Random.seed", .GlobalEnv)
     
     
@@ -20,7 +19,6 @@ grmvrasch.parallel.condsout.fntn <-
     output.temp <- as.data.frame(matrix(NA, nrow=length(models.run)*number.items, 
                                         ncol=length(col.out)))
     colnames(output.temp) <- col.out
-    #   ^nrow=3*number.items because testing 3 models plus all item info/stats
     
     # Put basic info in output:
     if (!is.null(uni.cond)) {
@@ -62,8 +60,6 @@ grmvrasch.parallel.condsout.fntn <-
     #   If Unidimensional:
     if (uni.cond == "Unidimensional") {
       #     Create one General Factor:
-      # latent.vars.df <- as.data.frame("Gen.Fac"=rnorm(n=sample.size, mean=0, sd=1))
-      # colnames(latent.vars.df) <- "Gen.Fac"
       latent.vars.df <- as.data.frame(
         faux::rnorm_multi(n=sample.size, vars=1, mu=0, sd=1, r=0, empirical=F,
                           varnames=c("Gen.Fac")))
@@ -86,10 +82,6 @@ grmvrasch.parallel.condsout.fntn <-
     
     #   Add the factor(s) to the dataframe:
     start.dat <- cbind(start.dat, latent.vars.df)
-    
-    # #     Examine/check the general factor/latent variable briefly:
-    # summary(latent.vars.df)
-    # hist(latent.vars.df$Gen.Fac)
     
     
     
@@ -119,18 +111,7 @@ grmvrasch.parallel.condsout.fntn <-
                                       "Loads.On.Factor"=NA)
         label.fac.items[fac1.seq,"Loads.On.Factor"] <- "Gen.Fac"
         label.fac.items[fac2.seq,"Loads.On.Factor"] <- "Fac.2"
-      } else if (uni.cond == "Unrelated") {
-        temp.fac.params.mat <- matrix(0, nrow=number.items, ncol=number.items)
-        diag(temp.fac.params.mat) <- gen.fac.loads
-        temp.fac.params <- as.data.frame(temp.fac.params.mat)
-        colnames(temp.fac.params) <- paste0("Fac.",1:number.items)
-        item.params <- cbind(temp.fac.params, 
-                             item.params[,which(grepl(colnames(item.params), 
-                                                      pattern="Int.", fixed=T))])
-        # Label which factor each item loads on:
-        label.fac.items <- data.frame("Item"=paste0("Item_",1:number.items),
-                                      "Loads.On.Factor"=paste0("Fac.",1:number.items))
-      }
+      } 
     } else if (uni.cond == "Unidimensional") {
       # Label which factor each item loads on:
       label.fac.items <- data.frame("Item"=paste0("Item_",1:number.items),
@@ -147,16 +128,6 @@ grmvrasch.parallel.condsout.fntn <-
     #     Save the two outputted datasets separately:
     dat.ord.items <- dat.ord.list$Data.Items.Only
     dat.ord.all <- dat.ord.list$Data.Items.Latent
-    
-    # #     Examine data/check briefly:
-    # xtabs(~Item_1, dat.ord.items, addNA=T)
-    # xtabs(~Item_2, dat.ord.items, addNA=T)
-    # xtabs(~Item_3, dat.ord.items, addNA=T)
-    # xtabs(~Item_4, dat.ord.items, addNA=T)
-    # xtabs(~Item_5, dat.ord.items, addNA=T)
-    # hist(dat.ord.items$Item_1)
-    # hist(dat.ord.items$Item_2)
-    # hist(dat.ord.items$Item_5)
     
     
     
@@ -179,9 +150,6 @@ grmvrasch.parallel.condsout.fntn <-
         if ("GPCM" %in% models.run) {
           gpcm.rows <- c(row.indices[3]:nrow(output.temp))
         }
-        # if ("RSM" %in% models.run) {
-        #   rsm.rows <- c(row.indices[3]:nrow(output.temp))
-        # }
       }
     } else {
       if ("PCM" %in% models.run) {
@@ -189,16 +157,10 @@ grmvrasch.parallel.condsout.fntn <-
         if ("GPCM" %in% models.run) {
           gpcm.rows <- c(row.indices[2]:nrow(output.temp))
         }
-        # if ("RSM" %in% models.run) {
-        #   rsm.rows <- c(row.indices[2]:nrow(output.temp))
-        # }
       } else {
         if ("GPCM" %in% models.run) {
           gpcm.rows <- c(row.indices[1]:nrow(output.temp))
         }
-        # if ("RSM" %in% models.run) {
-        #   rsm.rows <- c(row.indices[1]:nrow(output.temp))
-        # }
       }
     }
     #     Save the names of threshold columns:
@@ -221,7 +183,6 @@ grmvrasch.parallel.condsout.fntn <-
         grm.uni.mod <- mirt::mirt(data=dat.ord.items, model=1, itemtype="graded", 
                                   verbose=F, technical=list(NCYCLES=num.cycles))
       }
-      #     Need tryCatch statement for GRM Fit because it occasionally errors ("Error: could not invert orthogonal complement matrix")
       fit.grm.uni <- tryCatch(
         {mirt::M2(grm.uni.mod, type="C2")},
         error=function(e) { return(NA) }
@@ -238,7 +199,7 @@ grmvrasch.parallel.condsout.fntn <-
                                         verbose=F, approx.z=T)
       res.x2.grm.uni <- mirt::residuals(grm.uni.mod, type="LD", df.p=T, 
                                         verbose=F, approx.z=T)
-      #         Save just the approximately standardized G2 and X2 stats separately:
+      #         Save the approximately standardized G2 and X2 stats separately:
       res.g2.grm.uni.ld <- res.g2.grm.uni$LD
       res.g2.grm.uni.ld[upper.tri(res.g2.grm.uni.ld, diag=T)] <- NA
       res.x2.grm.uni.ld <- res.x2.grm.uni$LD
@@ -295,10 +256,6 @@ grmvrasch.parallel.condsout.fntn <-
       output.temp[grm.rows,"Count.P.LD.X2"] <- sum(res.x2.grm.uni.p.df < alpha, na.rm=T)
       output.temp[grm.rows,"Count.AdjP.LD.G2"] <- paste0(sum(res.g2.grm.uni.p.df < adj.alpha.level, na.rm=T),collapse=",")
       output.temp[grm.rows,"Count.AdjP.LD.X2"] <- paste0(sum(res.x2.grm.uni.p.df < adj.alpha.level, na.rm=T),collapse=",") 
-      # output.temp[grm.rows,"Count.P.LD.G2"] <- sum(res.g2.grm.uni$df.p < alpha, na.rm=T)
-      # output.temp[grm.rows,"Count.P.LD.X2"] <- sum(res.x2.grm.uni$df.p < alpha, na.rm=T)
-      # output.temp[grm.rows,"Count.AdjP.LD.G2"] <- paste0(sum(res.g2.grm.uni$df.p < adj.alpha.level, na.rm=T),collapse=",")
-      # output.temp[grm.rows,"Count.AdjP.LD.X2"] <- paste0(sum(res.x2.grm.uni$df.p < adj.alpha.level, na.rm=T),collapse=",")
       output.temp[grm.rows,"Count.Gt5LE10.LD.zG2"] <- sum((res.g2.grm.uni.ld > 5 & 
                                                              res.g2.grm.uni.ld <= 10), na.rm=T)
       output.temp[grm.rows,"Count.Gt5LE10.LD.zX2"] <- sum((res.x2.grm.uni.ld > 5 & 
@@ -360,7 +317,7 @@ grmvrasch.parallel.condsout.fntn <-
                                         verbose=F, approx.z=T)
       res.x2.pcm.uni <- mirt::residuals(pcm.uni.mod, type="LD", df.p=T, 
                                         verbose=F, approx.z=T)
-      #         Save just the approximately standardized G2 and X2 stats separately:
+      #         Save the approximately standardized G2 and X2 stats separately:
       res.g2.pcm.uni.ld <- res.g2.pcm.uni$LD
       res.g2.pcm.uni.ld[upper.tri(res.g2.pcm.uni.ld, diag=T)] <- NA
       res.x2.pcm.uni.ld <- res.x2.pcm.uni$LD
@@ -417,10 +374,6 @@ grmvrasch.parallel.condsout.fntn <-
       output.temp[pcm.rows,"Count.P.LD.X2"] <- sum(res.x2.pcm.uni.p.df < alpha, na.rm=T)
       output.temp[pcm.rows,"Count.AdjP.LD.G2"] <- paste0(sum(res.g2.pcm.uni.p.df < adj.alpha.level, na.rm=T),collapse=",")
       output.temp[pcm.rows,"Count.AdjP.LD.X2"] <- paste0(sum(res.x2.pcm.uni.p.df < adj.alpha.level, na.rm=T),collapse=",")
-      # output.temp[pcm.rows,"Count.P.LD.G2"] <- sum(res.g2.pcm.uni$df.p < alpha, na.rm=T)
-      # output.temp[pcm.rows,"Count.P.LD.X2"] <- sum(res.x2.pcm.uni$df.p < alpha, na.rm=T)
-      # output.temp[pcm.rows,"Count.AdjP.LD.G2"] <- paste0(sum(res.g2.pcm.uni$df.p < adj.alpha.level, na.rm=T),collapse=",")
-      # output.temp[pcm.rows,"Count.AdjP.LD.X2"] <- paste0(sum(res.x2.pcm.uni$df.p < adj.alpha.level, na.rm=T),collapse=",")
       output.temp[pcm.rows,"Count.Gt5LE10.LD.zG2"] <- sum((res.g2.pcm.uni.ld > 5 & 
                                                              res.g2.pcm.uni.ld <= 10), na.rm=T)
       output.temp[pcm.rows,"Count.Gt5LE10.LD.zX2"] <- sum((res.x2.pcm.uni.ld > 5 & 
@@ -502,7 +455,6 @@ grmvrasch.parallel.condsout.fntn <-
         gpcm.uni.mod <- mirt::mirt(data=dat.ord.items, model=1, itemtype="gpcm", 
                                    verbose=F, technical=list(NCYCLES=num.cycles))
       }
-      #     tryCatch statement in case occasionally errors:
       fit.gpcm.uni <- tryCatch(
         {mirt::M2(gpcm.uni.mod, type="C2")},
         error=function(e) { return(NA) }
@@ -519,7 +471,7 @@ grmvrasch.parallel.condsout.fntn <-
                                          verbose=F, approx.z=T)
       res.x2.gpcm.uni <- mirt::residuals(gpcm.uni.mod, type="LD", df.p=T, 
                                          verbose=F, approx.z=T)
-      #         Save just the approximately standardized G2 and X2 stats separately:
+      #         Save the approximately standardized G2 and X2 stats separately:
       res.g2.gpcm.uni.ld <- res.g2.gpcm.uni$LD
       res.g2.gpcm.uni.ld[upper.tri(res.g2.gpcm.uni.ld, diag=T)] <- NA
       res.x2.gpcm.uni.ld <- res.x2.gpcm.uni$LD
@@ -576,10 +528,6 @@ grmvrasch.parallel.condsout.fntn <-
       output.temp[gpcm.rows,"Count.P.LD.X2"] <- sum(res.x2.gpcm.uni.p.df < alpha, na.rm=T)
       output.temp[gpcm.rows,"Count.AdjP.LD.G2"] <- paste0(sum(res.g2.gpcm.uni.p.df < adj.alpha.level, na.rm=T),collapse=",")
       output.temp[gpcm.rows,"Count.AdjP.LD.X2"] <- paste0(sum(res.x2.gpcm.uni.p.df < adj.alpha.level, na.rm=T),collapse=",")
-      # output.temp[gpcm.rows,"Count.P.LD.G2"] <- sum(res.g2.gpcm.uni$df.p < alpha, na.rm=T)
-      # output.temp[gpcm.rows,"Count.P.LD.X2"] <- sum(res.x2.gpcm.uni$df.p < alpha, na.rm=T)
-      # output.temp[gpcm.rows,"Count.AdjP.LD.G2"] <- paste0(sum(res.g2.gpcm.uni$df.p < adj.alpha.level, na.rm=T),collapse=",")
-      # output.temp[gpcm.rows,"Count.AdjP.LD.X2"] <- paste0(sum(res.x2.gpcm.uni$df.p < adj.alpha.level, na.rm=T),collapse=",")
       output.temp[gpcm.rows,"Count.Gt5LE10.LD.zG2"] <- sum((res.g2.gpcm.uni.ld > 5 & 
                                                               res.g2.gpcm.uni.ld <= 10), na.rm=T)
       output.temp[gpcm.rows,"Count.Gt5LE10.LD.zX2"] <- sum((res.x2.gpcm.uni.ld > 5 & 
@@ -684,7 +632,7 @@ grmvrasch.parallel.condsout.fntn <-
     
     
     
-    # Return the results using the custom class:
+    # Return the results using custom class:
     result <- resultsAndData()
     result$resultOut <- output.temp
     result$resultData <- dat.ord.all
